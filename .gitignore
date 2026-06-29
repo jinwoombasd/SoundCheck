@@ -1,0 +1,27 @@
+.env
+.env.*
+!.env.example
+
+.DS_Store
+.obsidian/
+node_modules/
+
+# Agent runtime files
+.slack-codex-state.json
+.slack-codex-cursor-state.json
+.slack-codex-admin-state.json
+obsidian-log/
+dev/logs/
+dev/pids/
+*.log
+*.pid
+
+# Secrets and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*secret*
+*token*
