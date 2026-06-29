@@ -6,6 +6,14 @@
 .obsidian/
 node_modules/
 
+# Local agent and bridge operating files are not part of the public SoundCheck repo
+AGENTS.md
+ai-agent-system/
+bridge-docs/
+docs/plans/
+docs/roadmap/current-plan.md
+docs/roadmap/project-roadmap.md
+
 # Agent runtime files
 .slack-codex-state.json
 .slack-codex-cursor-state.json
