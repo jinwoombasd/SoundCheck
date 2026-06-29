@@ -6,6 +6,16 @@
 .obsidian/
 node_modules/
 
+# Python build and runtime files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
 # Local agent and bridge operating files are not part of the public SoundCheck repo
 AGENTS.md
 ai-agent-system/

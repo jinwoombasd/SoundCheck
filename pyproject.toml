@@ -1,0 +1,22 @@
+[project]
+name = "soundcheck"
+version = "0.1.0"
+description = "Early-stage audio file analysis for speech-focused sound checks."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+mp3 = [
+  "pydub>=0.25",
+  "soundfile>=0.12",
+]
+test = [
+  "pytest>=8",
+]
+
+[project.scripts]
+soundcheck-analyze = "soundcheck.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
