@@ -8,7 +8,7 @@ Related report template: `week-1-report-template.md`
 
 ## Purpose
 
-Track the first 10 church broadcast speech samples before the Week 2 file analyzer is implemented.
+Track the first 10 church broadcast speech samples for Week 2 threshold calibration and real-speech validation.
 
 This inventory is documentation-only. It does not require copyrighted audio, live Slack process changes, token updates, or runtime audio processing.
 
@@ -36,6 +36,14 @@ samples/
 If sample files are ever added to the repository, confirm first that they are allowed to be shared.
 
 ## Inventory Table
+
+Current readiness: not ready for threshold calibration.
+
+Reason:
+
+- Sample file names or private links are not listed yet.
+- Bad-sample primary problem labels still use the `P1-P9` placeholder.
+- Rights confirmation is still undecided for every sample row.
 
 | Sample ID | Target group | File name or private link | Source type | Good/Bad | Primary problem | Secondary problems | Rights confirmed | Reviewer note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

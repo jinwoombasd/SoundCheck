@@ -81,6 +81,28 @@ def test_stereo_balance_warning(tmp_path):
     assert "balance_mismatch" in codes
 
 
+def test_low_mid_heavy_wav_produces_muddy_warning(tmp_path):
+    path = tmp_path / "muddy.wav"
+    _write_sine_wav(path, frequency=250.0, amplitude=0.2, duration=1.0)
+
+    report = analyze_file(str(path))
+
+    codes = {judgment.code for judgment in report.judgments}
+    assert report.bands.dominant_band == "low_mid"
+    assert "muddy_low_mids" in codes
+
+
+def test_upper_mid_heavy_wav_produces_harsh_warning(tmp_path):
+    path = tmp_path / "harsh.wav"
+    _write_sine_wav(path, frequency=3500.0, amplitude=0.2, duration=1.0)
+
+    report = analyze_file(str(path))
+
+    codes = {judgment.code for judgment in report.judgments}
+    assert report.bands.relative_energy["upper_mid"] > 0.35
+    assert "harsh_upper_mid" in codes
+
+
 def test_too_short_file_fails_clearly(tmp_path):
     path = tmp_path / "short.wav"
     _write_sine_wav(path, frequency=1000.0, amplitude=0.2, duration=0.1)
@@ -171,6 +193,39 @@ def test_cli_json_outputs_parseable_report(tmp_path, capsys):
     assert "metrics" in report_data
     assert "bands" in report_data
     assert "judgments" in report_data
+
+
+def test_cli_accepts_mp3_sample_path(tmp_path, monkeypatch, capsys):
+    path = tmp_path / "sample.mp3"
+    path.write_bytes(b"placeholder-mp3-data")
+
+    def load_stub(source):
+        return AudioData(str(source), 16000, 1, _sine_frames(1000.0, 0.2, 1.0))
+
+    monkeypatch.setattr(loaders, "_load_mp3", load_stub)
+
+    exit_code = main([str(path), "--json"])
+
+    captured = capsys.readouterr()
+    report_data = json.loads(captured.out)
+    assert exit_code == 0
+    assert report_data["path"] == str(path)
+    assert report_data["metrics"]["duration_seconds"] == pytest.approx(1.0)
+
+
+def test_cli_week_1_json_outputs_template_fields(tmp_path, capsys):
+    path = tmp_path / "speech.wav"
+    _write_sine_wav(path, frequency=1000.0, amplitude=0.2, duration=1.0)
+
+    exit_code = main([str(path), "--week-1-json"])
+
+    captured = capsys.readouterr()
+    report_data = json.loads(captured.out)
+    assert exit_code == 0
+    assert report_data["report_header"]["file_name_or_input_source"] == str(path)
+    assert "overall_result" in report_data
+    assert "top_issues" in report_data
+    assert "engineer_details" in report_data
 
 
 def test_cli_missing_file_returns_clean_error(tmp_path, capsys):

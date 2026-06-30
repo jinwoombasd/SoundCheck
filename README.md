@@ -48,10 +48,16 @@ Planned checks include:
 
 ## Analyzer Usage
 
-Analyze a local WAV file:
+Analyze a local WAV or MP3 file:
 
 ```bash
 python3 -m soundcheck.cli path/to/audio.wav
+```
+
+For a local MP3 sample:
+
+```bash
+python3 -m soundcheck.cli samples/week-1/good/sample-01.mp3
 ```
 
 Print machine-readable output:
@@ -60,7 +66,17 @@ Print machine-readable output:
 python3 -m soundcheck.cli path/to/audio.wav --json
 ```
 
-WAV support works with the Python standard library. MP3 support is optional and requires either `soundfile` or `pydub` to be installed in the local environment.
+Print fields mapped to the Week 1 report template, including report header placeholders, cautious overall result, top issues, engineer details, and band-energy data:
+
+```bash
+python3 -m soundcheck.cli path/to/audio.wav --week-1-json
+```
+
+WAV support works with the Python standard library. MP3 support is optional and requires either `soundfile` or `pydub` to be installed in the local environment:
+
+```bash
+python3 -m pip install ".[mp3]"
+```
 
 ## Current Status
 

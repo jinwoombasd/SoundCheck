@@ -83,8 +83,22 @@ Current behavior:
 
 - WAV loading works through the Python standard library.
 - MP3 loading is supported when either optional local dependency `soundfile` or `pydub` is installed.
+- CLI output can be printed as either the full analyzer JSON or fields mapped to the Week 1 report template, including header placeholders, cautious result fields, top issues, engineer details, and band-energy data.
+- Current regression coverage includes generated WAV fixtures, MP3 dispatch, CLI JSON output, and Week 1 report-field mapping.
 - Tests use generated temporary WAV fixtures instead of committed sample audio.
 - No real-time input, direct console control, automatic EQ action, Slack runtime change, token change, or public sample audio has been added.
+
+Sample-free progress:
+
+- Generated WAV fixtures cover normal, quiet, clipped, short, and stereo-balance cases.
+- MP3 path handling is covered by dispatch tests without committing real sample audio.
+- Report-template JSON can be produced before real sample labels are available.
+
+Still sample-dependent:
+
+- Threshold calibration against real church speech.
+- GOOD/BAD confidence changes beyond the current Low-confidence default.
+- Demo sample selection and public sample publishing.
 
 ## Suggested Module Boundaries
 
@@ -101,13 +115,17 @@ Keep the implementation modular from the first commit:
 
 Before Week 2 is considered complete, verify:
 
-- Normal WAV analysis succeeds.
-- Normal MP3 analysis succeeds.
-- Mono and stereo files both work.
-- Very quiet samples produce a quiet-level warning.
-- Clipped samples produce a clipping warning.
-- Too-short files fail with a clear error.
-- Analysis output can fill the Week 1 report template.
+- [x] Normal WAV analysis succeeds with generated fixtures.
+- [x] MP3 path dispatch is covered without committing sample audio.
+- [x] Mono and stereo files both work with generated fixtures.
+- [x] Very quiet samples produce a quiet-level warning.
+- [x] Clipped samples produce a clipping warning.
+- [x] Low-mid-heavy generated fixtures produce a muddy low-mid warning.
+- [x] Upper-mid-heavy generated fixtures produce a harshness warning.
+- [x] Too-short files fail with a clear error.
+- [x] Analysis output can fill the Week 1 report template.
+- [ ] Normal MP3 analysis with real speech audio succeeds after a private sample is available.
+- [ ] Threshold behavior is checked against five good and five bad labeled speech samples.
 
 ## Deferred Work
 

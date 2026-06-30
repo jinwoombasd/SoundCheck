@@ -32,8 +32,13 @@ def build_judgments(metrics: LevelMetrics, bands: BandMetrics) -> List[Judgment]
         )
 
     energy = bands.relative_energy
-    if energy.get("low", 0.0) + energy.get("low_mid", 0.0) > 0.50:
-        judgments.append(_info("excess_low_end", "The sound may have too much low or low-mid energy.", "Low bands dominate the measured energy."))
+    low_energy = energy.get("low", 0.0)
+    low_mid_energy = energy.get("low_mid", 0.0)
+    if low_energy + low_mid_energy > 0.50:
+        if low_mid_energy > low_energy:
+            judgments.append(_info("muddy_low_mids", "The voice may sound muddy in the low-mid range.", "Low-mid energy dominates the measured energy."))
+        else:
+            judgments.append(_info("excess_low_end", "The sound may have too much low energy.", "Low bands dominate the measured energy."))
 
     if energy.get("speech_mid", 0.0) < 0.18:
         judgments.append(_info("weak_clarity", "Speech clarity may be weak.", "Speech-mid energy is low compared with other bands."))

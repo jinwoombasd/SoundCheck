@@ -6,6 +6,11 @@
 .obsidian/
 node_modules/
 
+# Private local audio samples should not be committed without confirmed sharing rights
+samples/
+*.wav
+*.mp3
+
 # Python build and runtime files
 __pycache__/
 *.py[cod]
