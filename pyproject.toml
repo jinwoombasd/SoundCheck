@@ -11,6 +11,9 @@ mp3 = [
   "pydub>=0.25",
   "soundfile>=0.12",
 ]
+pdf = [
+  "reportlab>=4",
+]
 test = [
   "pytest>=8",
 ]

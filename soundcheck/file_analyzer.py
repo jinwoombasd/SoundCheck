@@ -5,6 +5,7 @@ from .judgments import build_judgments
 from .loaders import load_audio_file
 from .metrics import calculate_metrics
 from .reports import AnalysisReport
+from .speech_analyzer import analyze_speech_clarity
 from .speech_bands import calculate_band_metrics
 
 
@@ -17,12 +18,14 @@ def analyze_file(path: str) -> AnalysisReport:
 
     metrics = calculate_metrics(audio)
     bands = calculate_band_metrics(audio)
+    speech_analysis = analyze_speech_clarity(audio)
     judgments = build_judgments(metrics, bands)
 
     return AnalysisReport(
         path=str(Path(path)),
         metrics=metrics,
         bands=bands,
+        speech_analysis=speech_analysis,
         judgments=judgments,
     )
 

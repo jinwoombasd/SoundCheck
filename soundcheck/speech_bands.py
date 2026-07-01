@@ -6,8 +6,8 @@ from .audio_data import AudioData
 
 
 BANDS: Dict[str, Tuple[float, float]] = {
-    "low": (80.0, 250.0),
-    "low_mid": (250.0, 500.0),
+    "low": (80.0, 200.0),
+    "low_mid": (200.0, 500.0),
     "speech_mid": (500.0, 2500.0),
     "upper_mid": (2500.0, 5000.0),
     "high": (5000.0, 10000.0),
@@ -24,19 +24,28 @@ class BandMetrics:
 
 
 def calculate_band_metrics(audio: AudioData) -> BandMetrics:
-    mono = _trim_or_stride(audio.mono(), MAX_ANALYSIS_SAMPLES)
+    relative = calculate_relative_energy(audio, BANDS)
+    return BandMetrics(relative_energy=relative, dominant_band=_dominant_band(relative))
+
+
+def calculate_relative_energy(audio: AudioData, bands: Dict[str, Tuple[float, float]]) -> Dict[str, float]:
+    mono = _trim(audio.mono(), MAX_ANALYSIS_SAMPLES)
     if not mono:
-        return BandMetrics(relative_energy={name: 0.0 for name in BANDS}, dominant_band="unknown")
+        return {name: 0.0 for name in bands}
 
     windowed = _apply_hann_window(mono)
     energies = {
         band: _band_energy(windowed, audio.sample_rate, low, high)
-        for band, (low, high) in BANDS.items()
+        for band, (low, high) in bands.items()
     }
     total = sum(energies.values()) or 1.0
-    relative = {band: energy / total for band, energy in energies.items()}
-    dominant = max(relative, key=relative.get)
-    return BandMetrics(relative_energy=relative, dominant_band=dominant)
+    return {band: energy / total for band, energy in energies.items()}
+
+
+def _dominant_band(relative_energy: Dict[str, float]) -> str:
+    if not relative_energy:
+        return "unknown"
+    return max(relative_energy, key=relative_energy.get)
 
 
 def _band_energy(samples: List[float], sample_rate: int, low: float, high: float) -> float:
@@ -51,8 +60,8 @@ def _band_frequencies(low: float, high: float) -> Iterable[float]:
         return []
     if POINTS_PER_BAND == 1:
         return [(low + high) / 2.0]
-    ratio = high / low
-    return [low * (ratio ** (index / (POINTS_PER_BAND - 1))) for index in range(POINTS_PER_BAND)]
+    step = (high - low) / (POINTS_PER_BAND - 1)
+    return [low + (step * index) for index in range(POINTS_PER_BAND)]
 
 
 def _goertzel_power(samples: List[float], sample_rate: int, frequency: float) -> float:
@@ -69,11 +78,10 @@ def _goertzel_power(samples: List[float], sample_rate: int, frequency: float) ->
     return previous2 * previous2 + previous * previous - coefficient * previous * previous2
 
 
-def _trim_or_stride(samples: List[float], max_samples: int) -> List[float]:
+def _trim(samples: List[float], max_samples: int) -> List[float]:
     if len(samples) <= max_samples:
         return samples
-    step = math.ceil(len(samples) / max_samples)
-    return samples[::step][:max_samples]
+    return samples[:max_samples]
 
 
 def _apply_hann_window(samples: List[float]) -> List[float]:

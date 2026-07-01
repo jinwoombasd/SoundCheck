@@ -11,6 +11,9 @@ samples/
 *.wav
 *.mp3
 
+# Generated local report exports should stay out of the public repo by default
+reports/
+
 # Python build and runtime files
 __pycache__/
 *.py[cod]

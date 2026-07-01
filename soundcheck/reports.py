@@ -1,8 +1,10 @@
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .judgments import Judgment
 from .metrics import LevelMetrics
+from .report_scores import calculate_report_scores
+from .speech_analyzer import SpeechClarityAnalysis
 from .speech_bands import BandMetrics
 
 
@@ -12,14 +14,18 @@ class AnalysisReport:
     metrics: LevelMetrics
     bands: BandMetrics
     judgments: List[Judgment]
+    speech_analysis: Optional[SpeechClarityAnalysis] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        report = {
             "path": self.path,
             "metrics": asdict(self.metrics),
             "bands": asdict(self.bands),
             "judgments": [asdict(judgment) for judgment in self.judgments],
         }
+        if self.speech_analysis is not None:
+            report["speech_clarity_analysis"] = self.speech_analysis.to_dict()
+        return report
 
     def to_week_1_report_fields(self) -> Dict[str, Any]:
         top_judgments = [judgment for judgment in self.judgments if judgment.code != "no_major_issue"][:3]
@@ -65,6 +71,27 @@ class AnalysisReport:
                 "dominant_band": self.bands.dominant_band,
                 "relative_energy": self.bands.relative_energy,
             },
+        }
+
+    def to_week_4_report_fields(self) -> Dict[str, Any]:
+        week_1_fields = self.to_week_1_report_fields()
+        scores = calculate_report_scores(self.metrics, self.bands, self.speech_analysis)
+        return {
+            "report_header": week_1_fields["report_header"],
+            "overall_result": {
+                **week_1_fields["overall_result"],
+                "overall_score": scores.overall,
+                "overall_status": scores.status,
+            },
+            "score_breakdown": scores.to_dict(),
+            "top_issues": week_1_fields["top_issues"],
+            "beginner_summary": week_1_fields["beginner_summary"],
+            "beginner_troubleshooting_guide": _beginner_troubleshooting_guide(
+                week_1_fields["top_issues"]
+            ),
+            "baseline_recommendation": _baseline_recommendation(scores.status),
+            "engineer_details": week_1_fields["engineer_details"],
+            "band_energy": week_1_fields["band_energy"],
         }
 
 
@@ -115,6 +142,25 @@ def _beginner_summary(judgments: List[Judgment]) -> str:
     if judgments[0].code == "no_major_issue":
         return "The speech sample has no major first-pass issue. Confirm the result with a listening check."
     return f"{judgments[0].message} Confirm this result with a listening check before making changes."
+
+
+def _beginner_troubleshooting_guide(top_issues: List[Dict[str, Any]]) -> List[str]:
+    if not top_issues:
+        return [
+            "Play the sample through normal listening speakers or headphones.",
+            "Confirm the speech is easy to understand before saving it as a reference.",
+            "Keep the current gain and EQ settings unless the listening check finds a problem.",
+        ]
+    return [
+        f"Check {issue['problem_id']}: {issue['suggested_next_action']}"
+        for issue in top_issues
+    ]
+
+
+def _baseline_recommendation(status: str) -> str:
+    if status == "GOOD":
+        return "This sample can be considered as a baseline candidate after a listening check."
+    return "Do not save this sample as a baseline until the listed issues are reviewed."
 
 
 def _clipping_evidence(metrics: LevelMetrics) -> str:

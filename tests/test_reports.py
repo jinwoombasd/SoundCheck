@@ -5,6 +5,7 @@ import pytest
 from soundcheck.judgments import Judgment
 from soundcheck.metrics import LevelMetrics
 from soundcheck.reports import AnalysisReport
+from soundcheck.speech_analyzer import SpeechClarityAnalysis, SpeechIssue
 from soundcheck.speech_bands import BandMetrics
 
 
@@ -42,6 +43,46 @@ def test_analysis_report_to_dict_is_json_serializable():
     assert decoded["judgments"][0]["code"] == "no_major_issue"
 
 
+def test_analysis_report_to_dict_includes_week_3_speech_clarity_analysis():
+    report = AnalysisReport(
+        path="speech.wav",
+        metrics=_example_report().metrics,
+        bands=_example_report().bands,
+        judgments=_example_report().judgments,
+        speech_analysis=SpeechClarityAnalysis(
+            band_scores={
+                "low_end_80_200hz": 0.05,
+                "muddy_200_400hz": 0.10,
+                "boxy_300_600hz": 0.12,
+                "clarity_2_5khz": 0.45,
+                "harsh_6_8khz": 0.28,
+            },
+            top_issues=[
+                SpeechIssue(
+                    code="harsh_upper_mid",
+                    priority_score=0.08,
+                    band="harsh_6_8khz",
+                    message="The voice may sound harsh or sharp.",
+                    detail="Energy from 6-8kHz is elevated compared with the speech reference bands.",
+                )
+            ],
+        ),
+    )
+
+    report_data = report.to_dict()
+
+    assert set(report_data) == {
+        "path",
+        "metrics",
+        "bands",
+        "judgments",
+        "speech_clarity_analysis",
+    }
+    assert report_data["speech_clarity_analysis"]["band_scores"]["harsh_6_8khz"] == 0.28
+    assert report_data["speech_clarity_analysis"]["top_issues"][0]["code"] == "harsh_upper_mid"
+    assert report_data["speech_clarity_analysis"]["top_issues"][0]["band"] == "harsh_6_8khz"
+
+
 def test_week_1_report_fields_map_stable_template_sections():
     report_fields = _example_report().to_week_1_report_fields()
 
@@ -71,6 +112,43 @@ def test_week_1_report_fields_map_stable_template_sections():
     assert report_fields["engineer_details"]["clipping_evidence"] == "None"
     assert report_fields["band_energy"]["dominant_band"] == "speech_mid"
     assert report_fields["band_energy"]["relative_energy"]["speech_mid"] == 0.55
+
+
+def test_week_4_report_fields_include_score_breakdown():
+    report_fields = _example_report().to_week_4_report_fields()
+
+    assert set(report_fields) == {
+        "report_header",
+        "overall_result",
+        "score_breakdown",
+        "top_issues",
+        "beginner_summary",
+        "beginner_troubleshooting_guide",
+        "baseline_recommendation",
+        "engineer_details",
+        "band_energy",
+    }
+    assert report_fields["overall_result"]["overall_score"] == 100
+    assert report_fields["overall_result"]["overall_status"] == "GOOD"
+    assert report_fields["score_breakdown"] == {
+        "overall": 100,
+        "level": 20,
+        "clipping": 20,
+        "speech_clarity": 20,
+        "low_end_balance": 15,
+        "harshness": 10,
+        "noise": 10,
+        "stereo": 5,
+        "status": "GOOD",
+    }
+    assert report_fields["beginner_troubleshooting_guide"] == [
+        "Play the sample through normal listening speakers or headphones.",
+        "Confirm the speech is easy to understand before saving it as a reference.",
+        "Keep the current gain and EQ settings unless the listening check finds a problem.",
+    ]
+    assert report_fields["baseline_recommendation"] == (
+        "This sample can be considered as a baseline candidate after a listening check."
+    )
 
 
 def test_week_1_report_fields_map_problem_ids_and_danger_status():
@@ -208,6 +286,71 @@ def test_week_1_report_fields_map_high_noise_floor_to_p8():
     assert report_fields["overall_result"]["overall_status"] == "WARNING"
     assert report_fields["top_issues"][0]["problem_id"] == "P8"
     assert report_fields["engineer_details"]["noise_floor"] == "High"
+
+
+def test_week_1_report_fields_limit_top_issues_to_first_three_problems():
+    report = AnalysisReport(
+        path="many-problems.wav",
+        metrics=LevelMetrics(
+            duration_seconds=1.0,
+            sample_rate=16000,
+            channels=1,
+            peak_dbfs=-0.1,
+            rms_dbfs=-10.0,
+            crest_factor_db=9.9,
+            clipping_count=12,
+            clipping_ratio=0.001,
+            left_right_balance_db=8.0,
+            noise_floor_dbfs=-38.0,
+        ),
+        bands=BandMetrics(
+            relative_energy={
+                "low": 0.35,
+                "low_mid": 0.25,
+                "speech_mid": 0.10,
+                "upper_mid": 0.45,
+                "high": 0.05,
+            },
+            dominant_band="upper_mid",
+        ),
+        judgments=[
+            Judgment(
+                code="no_major_issue",
+                severity="ok",
+                message="No major first-pass issue was detected.",
+                detail="Validate this result with listening checks.",
+            ),
+            Judgment(
+                code="possible_clipping",
+                severity="warning",
+                message="Possible clipping or digital overload was detected.",
+                detail="Peaks are near full scale.",
+            ),
+            Judgment(
+                code="excess_low_end",
+                severity="info",
+                message="The sample may have too much low-frequency energy.",
+                detail="Low energy is high compared with speech bands.",
+            ),
+            Judgment(
+                code="harsh_upper_mid",
+                severity="info",
+                message="Speech may sound harsh in the upper-mid range.",
+                detail="Upper-mid energy is elevated.",
+            ),
+            Judgment(
+                code="high_noise_floor",
+                severity="info",
+                message="Background noise may be high compared with the speech level.",
+                detail="Quiet passages are relatively loud.",
+            ),
+        ],
+    )
+
+    report_fields = report.to_week_1_report_fields()
+
+    assert [issue["priority"] for issue in report_fields["top_issues"]] == [1, 2, 3]
+    assert [issue["problem_id"] for issue in report_fields["top_issues"]] == ["P3", "P4", "P7"]
 
 
 @pytest.mark.parametrize(

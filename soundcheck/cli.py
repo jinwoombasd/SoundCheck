@@ -4,6 +4,8 @@ import sys
 from typing import Sequence
 
 from .file_analyzer import analyze_file
+from .html_report import write_week_4_html_report
+from .pdf_report import write_week_4_pdf_report
 
 
 def main(argv: Sequence[str] = None) -> int:
@@ -14,6 +16,21 @@ def main(argv: Sequence[str] = None) -> int:
         "--week-1-json",
         action="store_true",
         help="Print report fields mapped to the Week 1 report template as JSON.",
+    )
+    parser.add_argument(
+        "--week-4-json",
+        action="store_true",
+        help="Print report fields with the Week 4 score breakdown as JSON.",
+    )
+    parser.add_argument(
+        "--week-4-html",
+        metavar="OUTPUT_PATH",
+        help="Write a Week 4 HTML report to the given path.",
+    )
+    parser.add_argument(
+        "--week-4-pdf",
+        metavar="OUTPUT_PATH",
+        help="Write a Week 4 PDF report to the given path.",
     )
     args = parser.parse_args(argv)
 
@@ -29,6 +46,24 @@ def main(argv: Sequence[str] = None) -> int:
 
     if args.week_1_json:
         print(json.dumps(report.to_week_1_report_fields(), indent=2, sort_keys=True))
+        return 0
+
+    if args.week_4_json:
+        print(json.dumps(report.to_week_4_report_fields(), indent=2, sort_keys=True))
+        return 0
+
+    if args.week_4_html:
+        output_path = write_week_4_html_report(report, args.week_4_html)
+        print(f"Wrote Week 4 HTML report: {output_path}")
+        return 0
+
+    if args.week_4_pdf:
+        try:
+            output_path = write_week_4_pdf_report(report, args.week_4_pdf)
+        except ImportError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        print(f"Wrote Week 4 PDF report: {output_path}")
         return 0
 
     metrics = report.metrics

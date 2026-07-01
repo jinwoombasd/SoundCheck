@@ -228,6 +228,49 @@ def test_cli_week_1_json_outputs_template_fields(tmp_path, capsys):
     assert "engineer_details" in report_data
 
 
+def test_cli_week_4_json_outputs_score_breakdown(tmp_path, capsys):
+    path = tmp_path / "speech.wav"
+    _write_sine_wav(path, frequency=1000.0, amplitude=0.2, duration=1.0)
+
+    exit_code = main([str(path), "--week-4-json"])
+
+    captured = capsys.readouterr()
+    report_data = json.loads(captured.out)
+    assert exit_code == 0
+    assert report_data["overall_result"]["overall_score"] >= 0
+    assert report_data["score_breakdown"]["overall"] >= 0
+    assert report_data["score_breakdown"]["status"] in {"GOOD", "WARNING", "DANGER"}
+
+
+def test_cli_week_4_html_writes_report_file(tmp_path, capsys):
+    path = tmp_path / "speech.wav"
+    output_path = tmp_path / "reports" / "speech.html"
+    _write_sine_wav(path, frequency=1000.0, amplitude=0.2, duration=1.0)
+
+    exit_code = main([str(path), "--week-4-html", str(output_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert f"Wrote Week 4 HTML report: {output_path}" in captured.out
+    assert output_path.exists()
+    assert "Score Breakdown" in output_path.read_text(encoding="utf-8")
+
+
+def test_cli_week_4_pdf_writes_report_file(tmp_path, capsys):
+    pytest.importorskip("reportlab")
+    path = tmp_path / "speech.wav"
+    output_path = tmp_path / "reports" / "speech.pdf"
+    _write_sine_wav(path, frequency=1000.0, amplitude=0.2, duration=1.0)
+
+    exit_code = main([str(path), "--week-4-pdf", str(output_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert f"Wrote Week 4 PDF report: {output_path}" in captured.out
+    assert output_path.exists()
+    assert output_path.read_bytes().startswith(b"%PDF")
+
+
 def test_cli_missing_file_returns_clean_error(tmp_path, capsys):
     path = tmp_path / "missing.wav"
 

@@ -43,6 +43,10 @@ Planned checks include:
 - `docs/project/week-1-report-template.md` - manual report template for early samples
 - `docs/project/week-1-sample-inventory.md` - Week 1 sample tracking template
 - `docs/project/week-2-analyzer-handoff.md` - Week 2 analyzer start conditions and scope
+- `docs/project/week-3-speech-clarity-handoff.md` - Week 3 speech clarity scope and verification status
+- `docs/project/week-4-report-generation-handoff.md` - Week 4 report generation scope and verification status
+- `docs/project/sample-week-4-report.html` - scrubbed synthetic demo HTML report
+- `docs/project/sample-week-4-report.pdf` - scrubbed synthetic demo PDF report
 - `docs/roadmap/x32-ai-eq-mvp-plan.md` - X32-focused EQ assistant MVP concept
 - `docs/roadmap/ai-roadmap.md` - later AI feature roadmap
 
@@ -72,14 +76,40 @@ Print fields mapped to the Week 1 report template, including report header place
 python3 -m soundcheck.cli path/to/audio.wav --week-1-json
 ```
 
+Print the first Week 4 report-score structure, including the 100-point score breakdown for level, clipping, speech clarity, low-end balance, harshness, noise, and stereo balance:
+
+```bash
+python3 -m soundcheck.cli path/to/audio.wav --week-4-json
+```
+
+Write the first Week 4 HTML report:
+
+```bash
+python3 -m soundcheck.cli path/to/audio.wav --week-4-html reports/speech-check.html
+```
+
+Write a Week 4 PDF report:
+
+```bash
+python3 -m soundcheck.cli path/to/audio.wav --week-4-pdf reports/speech-check.pdf
+```
+
 WAV support works with the Python standard library. MP3 support is optional and requires either `soundfile` or `pydub` to be installed in the local environment:
 
 ```bash
 python3 -m pip install ".[mp3]"
 ```
 
+PDF export is optional and requires `reportlab`:
+
+```bash
+python3 -m pip install ".[pdf]"
+```
+
 ## Current Status
 
-This repository contains planning documents and the first file-based audio analyzer implementation. The analyzer currently reports duration, sample rate, channel count, level metrics, clipping, approximate speech-band energy, and cautious beginner-facing findings.
+This repository contains planning documents and the first file-based audio analyzer implementation. The analyzer currently reports duration, sample rate, channel count, level metrics, clipping, approximate speech-band energy, Week 3 speech clarity band scores, top-three speech issues, cautious beginner-facing findings, an initial Week 4 report-score breakdown, and basic Week 4 HTML and PDF reports.
+
+Week 3 comparison-table support is available for private labeled samples, but threshold calibration is still waiting on five good and five bad speech samples.
 
 Raw audio samples should stay private until usage rights are confirmed.
