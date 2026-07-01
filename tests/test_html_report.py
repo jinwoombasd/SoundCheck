@@ -23,9 +23,24 @@ def test_render_week_4_html_report_keeps_review_order_and_viewport():
 
     assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in html
     assert html.index('<section class="report-header">') < html.index("Score Breakdown")
+    assert html.index("Score Breakdown") < html.index("Frequency Balance")
+    assert html.index("Frequency Balance") < html.index("Top Issues")
     assert html.index("Score Breakdown") < html.index("Top Issues")
     assert html.index("Top Issues") < html.index("Beginner Troubleshooting Guide")
     assert html.index("Beginner Troubleshooting Guide") < html.index("Engineer Details")
+
+
+def test_render_week_4_html_report_contains_frequency_balance_graph():
+    html = render_week_4_html_report(_example_report())
+
+    assert "Speech-focused relative energy from 80 Hz to 10 kHz." in html
+    assert "80-200 Hz" in html
+    assert "200-500 Hz" in html
+    assert "500 Hz-2.5 kHz" in html
+    assert "2.5-5 kHz" in html
+    assert "5-10 kHz" in html
+    assert 'style="width: 55%;"' in html
+    assert "<span>55%</span>" in html
 
 
 def test_render_week_4_html_report_escapes_report_text():

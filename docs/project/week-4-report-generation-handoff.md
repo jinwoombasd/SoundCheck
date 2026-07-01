@@ -19,12 +19,12 @@ Completed:
 - CLI JSON output is available with `--week-4-json`.
 - HTML report writing is available with `--week-4-html OUTPUT_PATH`.
 - PDF report writing is available with `--week-4-pdf OUTPUT_PATH` when the optional `pdf` dependency is installed.
-- Regression coverage includes score calculation, report-field mapping, CLI output, HTML rendering, HTML escaping, and report file creation.
+- The HTML report includes a frequency-balance graph for low, low-mid, speech-mid, upper-mid, and high energy.
+- Regression coverage includes score calculation, report-field mapping, CLI output, HTML rendering, HTML escaping, frequency-graph rendering, section order, and report file creation.
 
 Not completed:
 
 - Threshold calibration against five good and five bad private speech samples.
-- Frequency graph rendering inside the HTML report.
 
 ## Current CLI Usage
 
@@ -57,8 +57,9 @@ The current Week 4 report foundation is acceptable when:
 
 - The score breakdown totals 100 points across level, clipping, speech clarity, low-end balance, harshness, noise, and stereo balance.
 - The report shows an overall score and a GOOD, WARNING, or DANGER status.
-- The report includes top issues, beginner-facing guidance, engineer-facing details, and baseline guidance.
+- The report includes top issues, beginner-facing guidance, engineer-facing details, a frequency-balance graph, and baseline guidance.
 - HTML output escapes user-controlled text such as file names and judgment messages.
+- Generated local reports remain ignored under `reports/` unless a scrubbed demo artifact is separately approved.
 - Existing analyzer JSON and Week 1 JSON output remain unchanged.
 - `python3 -m pytest` passes.
 - `git diff --check` passes.
@@ -86,6 +87,6 @@ Safe sample report rules:
 
 ## Next Small Work Candidate
 
-The next no-approval task should be limited to verification or documentation, such as checking README consistency, adding a small HTML layout assertion, or confirming that generated report files are ignored before any demo reports are created.
+The next no-approval task should be limited to verification or documentation, such as checking README consistency after report changes or rerunning focused HTML/PDF report tests.
 
-The next approval-required task is PDF export or checked-in sample report generation.
+The next approval-required task is checked-in sample report generation beyond the existing scrubbed synthetic demo artifacts.

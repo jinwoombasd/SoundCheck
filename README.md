@@ -94,6 +94,9 @@ Write a Week 4 PDF report:
 python3 -m soundcheck.cli path/to/audio.wav --week-4-pdf reports/speech-check.pdf
 ```
 
+Generated local reports should stay under `reports/`, which is ignored by Git.
+Only commit scrubbed demo reports that contain no private audio, customer, venue, local path, token, or runtime-log details.
+
 WAV support works with the Python standard library. MP3 support is optional and requires either `soundfile` or `pydub` to be installed in the local environment:
 
 ```bash

@@ -27,6 +27,7 @@ def render_week_4_html_report(report: AnalysisReport) -> str:
             "<main>",
             _header_html(header, overall),
             _score_summary_html(scores),
+            _frequency_graph_html(fields),
             _issues_html(fields),
             _beginner_guide_html(fields),
             _engineer_details_html(fields),
@@ -108,6 +109,45 @@ def _issues_html(fields: Dict[str, Any]) -> str:
     return "\n".join(["<section>", "<h2>Top Issues</h2>", content, "</section>"])
 
 
+def _frequency_graph_html(fields: Dict[str, Any]) -> str:
+    band_energy = fields["band_energy"]["relative_energy"]
+    rows = [
+        ("Low", "80-200 Hz", band_energy.get("low", 0.0)),
+        ("Low-mid", "200-500 Hz", band_energy.get("low_mid", 0.0)),
+        ("Speech-mid", "500 Hz-2.5 kHz", band_energy.get("speech_mid", 0.0)),
+        ("Upper-mid", "2.5-5 kHz", band_energy.get("upper_mid", 0.0)),
+        ("High", "5-10 kHz", band_energy.get("high", 0.0)),
+    ]
+    graph_rows = "\n".join(
+        "\n".join(
+            [
+                '<div class="frequency-row">',
+                '<div class="frequency-label">',
+                f"<strong>{_text(label)}</strong>",
+                f"<span>{_text(range_label)}</span>",
+                "</div>",
+                '<div class="frequency-track" aria-hidden="true">',
+                f'<div class="frequency-bar" style="width: {_percent_width(value)}%;"></div>',
+                "</div>",
+                f"<span>{_text(_percent_label(value))}</span>",
+                "</div>",
+            ]
+        )
+        for label, range_label, value in rows
+    )
+    return "\n".join(
+        [
+            "<section>",
+            "<h2>Frequency Balance</h2>",
+            '<p class="section-note">Speech-focused relative energy from 80 Hz to 10 kHz.</p>',
+            '<div class="frequency-graph">',
+            graph_rows,
+            "</div>",
+            "</section>",
+        ]
+    )
+
+
 def _beginner_guide_html(fields: Dict[str, Any]) -> str:
     steps = "\n".join(
         f"<li>{_text(step)}</li>" for step in fields["beginner_troubleshooting_guide"]
@@ -160,6 +200,18 @@ def _text(value: Any) -> str:
     return escape(str(value), quote=True)
 
 
+def _percent_width(value: Any) -> int:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        numeric = 0.0
+    return round(min(max(numeric, 0.0), 1.0) * 100)
+
+
+def _percent_label(value: Any) -> str:
+    return f"{_percent_width(value)}%"
+
+
 def _stylesheet() -> str:
     return """
 body {
@@ -195,6 +247,37 @@ h1, h2, h3, p {
   border-radius: 999px;
   padding: 6px 12px;
 }
+.section-note {
+  color: #52606d;
+  margin-bottom: 16px;
+}
+.frequency-graph {
+  display: grid;
+  gap: 12px;
+}
+.frequency-row {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(130px, 1fr) 3fr 52px;
+}
+.frequency-label {
+  display: grid;
+}
+.frequency-label span {
+  color: #52606d;
+  font-size: 0.9rem;
+}
+.frequency-track {
+  background: #e6edf5;
+  border-radius: 999px;
+  height: 14px;
+  overflow: hidden;
+}
+.frequency-bar {
+  background: #2f80ed;
+  height: 100%;
+}
 table {
   border-collapse: collapse;
   width: 100%;
@@ -207,5 +290,14 @@ td, th {
 article {
   border-top: 1px solid #d9e2ec;
   padding-top: 16px;
+}
+@media (max-width: 640px) {
+  .frequency-row {
+    grid-template-columns: 1fr 52px;
+  }
+  .frequency-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 """.strip()
